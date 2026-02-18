@@ -102,7 +102,6 @@
 
 
 
-
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -120,7 +119,7 @@ import orderRoutes from "./order.route.js";
 
 const app = express();
 
-// MIDDLEWARE
+// ================= MIDDLEWARE =================
 app.use(express.json());
 app.use(cookieParser());
 
@@ -138,30 +137,44 @@ app.use(
   })
 );
 
-// CLOUDINARY
+// ================= CLOUDINARY =================
 cloudinary.config({
   cloud_name: process.env.cloud_name,
   api_key: process.env.api_key,
   api_secret: process.env.api_secret,
 });
 
-// DATABASE (Vercel-safe)
+// ================= DATABASE =================
 let isConnected = false;
 
 async function connectDB() {
   if (isConnected) return;
-  await mongoose.connect(process.env.MONGO_URI);
-  isConnected = true;
-  console.log("MongoDB connected");
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    isConnected = true;
+    console.log("MongoDB connected");
+  } catch (err) {
+    console.error("MongoDB connection error:", err.message);
+    process.exit(1);
+  }
 }
 
 connectDB();
 
-// ROUTES
+// ================= ROUTES =================
 app.use("/api/v1/course", courseRouter);
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/order", orderRoutes);
 app.use("/api/v1/admin", adminRoute);
 
-// ❗ Export app instead of listening
-export default app;
+// ================= ROOT =================
+app.get("/", (req, res) => {
+  res.send("API is running 🚀");
+});
+
+// ================= START SERVER =================
+const PORT = process.env.PORT || 10000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
